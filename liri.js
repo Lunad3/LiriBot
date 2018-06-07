@@ -11,33 +11,41 @@ var TwitterAPI = require("twitter");
 var MyTwitter = new TwitterAPI(keys.twitter);
 
 var liri = {
-    "my-tweets":function(){
-        console.log("running liri.mytweets()");
+    "my-tweets":{
+        needsArg: false,
+        run:function(){
+            console.log("running liri.mytweets()");
+        }
     },
-    "spotify-this-song":function(){
-        console.log("running liri.spotify-this-song()");
+    "spotify-this-song":{
+        needsArg: false,
+        run:function(){
+            console.log("running liri.spotify-this-song()");
+        }
     },
-    "movie-this":function(){
-        console.log("running liri.movie-this()");
+    "movie-this":{
+        needsArg: false,
+        run:function(){
+            console.log("running liri.movie-this()");
+        }
     },
-    "do-what-it-says":function(){
-        console.log("running liri.do-what-it-says()");
+    "do-what-it-says":{
+        needsArg: false,
+        run:function(){
+            console.log("running liri.do-what-it-says()");
+        }
     },
-
-
 }
 
-if (process.argv.length == 4){
+if (process.argv.length > 3){
     var cmd = process.argv[2];
-    console.log("cmd: " + cmd);
     var param = process.argv[3];
-    console.log("param: " + param);
     for (var command in liri){
         if (cmd == command){
-            liri[command]();    
+            if (liri[command].needsArg && (process.argv.length == 4))
+            liri[command](param);
         }
     }
-
 }
 else{
     console.log("Liri: invalid input, use format : [node liri.js (command) (paramater)]");

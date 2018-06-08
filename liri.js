@@ -10,6 +10,12 @@ var MySpotify = new SpotifyAPI(keys.spotify);
 var TwitterAPI = require("twitter");
 var MyTwitter = new TwitterAPI(keys.twitter);
 
+//set up request
+var request = require("request");
+
+//set up fs
+var fs = require("fs");
+
 //--------------------------------------------- LIRI-OBJ ----------------------------------------
 //liri.commands holds cmd obj that have:
 // + name       : comand in string
@@ -36,7 +42,7 @@ var liri = {
                         liri.helperFunctions.displayMsg(tweetArr);
                     }
                     else{
-                        liri.helperFunctions.displayMsg(["LIRI::ERROR::my-tweets:: unknown error",response])
+                        liri.helperFunctions.displayMsg(["LIRI::ERROR::my-tweets:: request error",response])
                     }
                 });
             }        
@@ -44,13 +50,13 @@ var liri = {
         "spotify-this-song":{
             name:"spotify-this-song",
             description: "display song information",
-            defaultArg: "The Sign",
+            defaultArg: "The Sign - Ace of Base",
             run:function(song){
                 if (song == undefined)
-                    {song = "The Sign - Ace of Base";}
-                MySpotify.search({ type: 'track', query: song ,limit:1}, function(err, response) {
+                    {song = this.defaultArg;}
+                MySpotify.search({ type: 'track', query: song ,limit:1}, function(error, response) {
                     var trackInfoArr = [];
-                    if (!err) {
+                    if (!error) {
                         trackInfoArr.push("Artist   : " + response.tracks.items[0].artists[0].name);
                         trackInfoArr.push("Song     : " + response.tracks.items[0].name);
                         trackInfoArr.push("Prev Link: " + response.tracks.items[0].preview_url);
@@ -58,7 +64,7 @@ var liri = {
                         liri.helperFunctions.displayMsg(trackInfoArr);
                     }
                     else{
-                        liri.helperFunctions.displayMsg(["LIRI::ERROR::spotify-this-song:: unknown error",response])
+                        liri.helperFunctions.displayMsg(["LIRI::ERROR::spotify-this-song:: request error",response])
                     }
                 });
             }
@@ -68,22 +74,57 @@ var liri = {
             // movie title, release year, IMBD rating, Rotten Tomatoes rating, coutry produced in, language, plot, and actors
             description: "display movie details",
             defaultArg: "Mr. Nobody",
-            run:function(){
-                console.log("running liri.movie-this()");
+            run:function(movie){
+                if (movie == undefined)
+                    {movie = this.defaultArg;}
+                
+                request( "http://www.omdbapi.com/?apikey=trilogy&plot=short&t=" + encodeURIComponent(movie), function(error, response,body) {
+                    var movieInfoArr = [];
+                    if (!error) {
+                        var bodyObj = JSON.parse(body);
+                        movieInfoArr.push("Title                 : " + bodyObj.Title);
+                        movieInfoArr.push("Released              : " + bodyObj.Released);
+                        for(var ratingIndex in bodyObj.Ratings){
+                            console.log(bodyObj.Ratings[ratingIndex]);
+                            if (bodyObj.Ratings[ratingIndex].Source == "Internet Movie Database"){
+                                movieInfoArr.push("IMBD Rating           : " + bodyObj.Ratings[ratingIndex].Value);                                
+                            }
+                            if (bodyObj.Ratings[ratingIndex].Source == "Rotten Tomatoes"){
+                                movieInfoArr.push("Rotten Tomatoes Rating: " + bodyObj.Ratings[ratingIndex].Value);
+                            }
+                        }
+                        movieInfoArr.push("Produced in           : " + bodyObj.Country);
+                        movieInfoArr.push("Language              : " + bodyObj.Language);
+                        movieInfoArr.push("Plot                  : " + bodyObj.Plot);
+                        movieInfoArr.push("actors                : " + bodyObj.Actors);                        
+                        liri.helperFunctions.displayMsg(movieInfoArr);
+                    }
+                    else{
+                        liri.helperFunctions.displayMsg(["LIRI::ERROR::spotify-this-song:: request error",response])
+                    }
+                });
             },
         },
         "do-what-it-says":{
             name:"do-what-it-says",
-            description: "",
+            description: "read random.txt and execute its contents as cmd and param",
             run:function(){
-                console.log("running liri.do-what-it-says()");
+                fs.readFile("random.txt","utf8", function(error, data){
+                    if (!error){
+                        var argArr = data.split(",");
+                        liri.executeCommand(argArr[0],argArr[1]);
+                    }
+                    else{
+                        liri.helperFunctions.displayMsg(["LIRI::ERROR::do-what-it-says:: request error"])
+                    }
+                });
             },
         },
         "help":{
             name:"help",
             description: "display liri commands",
             run:function(){
-                var cmdStrArr = ["-- EXAMPLE [DEFAULT]  -  DESCRIPTION --"];
+                var cmdStrArr = ["EXAMPLE: \n\t+ DEFAULT ARG (if args needed)\n\t- DESCRIPTION\n"];
                 for(cmd in liri.commands){
                     cmdStrArr.push(liri.helperFunctions.commandStr(cmd));
                 }
@@ -93,11 +134,11 @@ var liri = {
     },
     helperFunctions:{
         commandStr:function(cmdName){
-            var str = liri.commands[cmdName].name;
+            var str = liri.commands[cmdName].name + ":\n\t";
             if (liri.commands[cmdName].defaultArg != undefined){
-                str += " [" + liri.commands[cmdName].defaultArg + "]";
+                str += "+ " + liri.commands[cmdName].defaultArg + "\n\t";
             }
-            str += "  -  " + liri.commands[cmdName].description;
+            str += "- " + liri.commands[cmdName].description + "\n";
             return str;
         },
         displayMsg:function(msgArr){
@@ -107,28 +148,31 @@ var liri = {
             }
             console.log("==============================================================================")
         }
+    },
+    executeCommand: function(cmd,param){
+        var commandObj = liri.commands[cmd];
+        if (commandObj != undefined){
+            if (param == undefined){
+                commandObj.run()
+            }
+            else{
+                commandObj.run(param);
+            }
+        }
+        else{
+            liri.helperFunctions.displayMsg(["LIRI::ERROR::InvalidCommand:: try 'help' for list of commands"]);
+        }    
+    },
+    Start: function(){
+        if (process.argv.length <= 4){
+            var cmd = process.argv[2];
+            var param = process.argv[3];
+            liri.executeCommand(cmd,param);
+        }
+        else{
+            liri.helperFunctions.displayMsg(["ERROR::ArgumentError:: use -> node liri.js (command) (paramater)"]);
+        }
     }
 };
 
-// --------------------------------------------- LIRI-INTERFACE ----------------------------------------
-// process user input
-if (process.argv.length <= 4){
-    var cmd = process.argv[2];
-    var param = process.argv[3];
-    var invalidCommand = true;
-    var commandObj = liri.commands[cmd];
-    if (commandObj != undefined){
-        if (param == undefined){
-            commandObj.run()
-        }
-        else{
-            commandObj.run(param);
-        }
-    }
-    else{
-        liri.helperFunctions.displayMsg(["ERROR::InvalidCommand:: try 'help'"]);
-    }
-}
-else{
-    liri.helperFunctions.displayMsg(["ERROR::ArgumentError:: use -> node liri.js (command) (paramater)"]);
-}
+liri.Start();

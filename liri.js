@@ -21,9 +21,21 @@ var liri = {
     commands:{
         "my-tweets":{
             name:"my-tweets",
-            description: "Display 20 most recent tweets",
+            description: "Display 20(max) most recent tweets",
             run:function(){
-                console.log("running liri.mytweets()");
+                MyTwitter.get('statuses/user_timeline',{screen_name: "LiriBot4"}, function(error, tweets, response) {
+                    if (!error) {
+                        var tweetArr = [];
+                        var maxIndex = 20;
+                        if (tweets.length < maxIndex){
+                            maxIndex = tweets.length;
+                        }
+                        for(var tweetIndex = 0; tweetIndex < maxIndex; tweetIndex++){
+                            tweetArr.push("  " + tweets[tweetIndex].text + "  @  " + tweets[tweetIndex].created_at);
+                        }
+                        liri.helperFunctions.displayMsg(tweetArr);
+                    }
+                  });
             }        
         },
         "spotify-this-song":{
@@ -54,32 +66,36 @@ var liri = {
             name:"help",
             description: "display liri commands",
             run:function(){
-                console.log("================================ LIRI COMMANDS ===============================");
-                console.log("  ExampleCommand [default] -  description ");
-                console.log("==============================================================================")
+                var cmdStrArr = ["  -- EXAMPLE [DEFAULT]  -  DESCRIPTION --"];
                 for(cmd in liri.commands){
-                    liri.helperFunctions.displayCommand(cmd)
+                    cmdStrArr.push(liri.helperFunctions.commandStr(cmd));
                 }
-                console.log("==============================================================================")
-
+                liri.helperFunctions.displayMsg(cmdStrArr);
             },
         }    
     },
     helperFunctions:{
-        displayCommand:function(cmdName){
-            var str = "\t" + liri.commands[cmdName].name;
+        commandStr:function(cmdName){
+            var str = "  " + liri.commands[cmdName].name;
             if (liri.commands[cmdName].defaultArg != undefined){
                 str += " [" + liri.commands[cmdName].defaultArg + "]";
             }
-            str += " -  " + liri.commands[cmdName].description;
-            console.log(str);
+            str += "  -  " + liri.commands[cmdName].description;
+            return str;
+        },
+        displayMsg:function(msgArr){
+            console.log("================================ LIRI ========================================");
+            for(var i=0; i<msgArr.length; i++){
+                console.log(msgArr[i]);
+            }
+            console.log("==============================================================================")
         }
     }
 };
 
 // --------------------------------------------- LIRI-INTERFACE ----------------------------------------
 // process user input
-if ( 2 < process.argv.length <= 4){
+if (process.argv.length <= 4){
     var cmd = process.argv[2];
     var param = process.argv[3];
     var invalidCommand = true;
@@ -93,9 +109,9 @@ if ( 2 < process.argv.length <= 4){
         }
     }
     else{
-        console.log("LIRI::ERROR::InvalidCommand:: try 'help'");
+        liri.helperFunctions.displayMsg(["  ERROR::InvalidCommand:: try 'help'"]);
     }
 }
 else{
-    console.log("LIRI::ERROR::ArgumentError:: use -> node liri.js (command) (paramater)");
+    liri.helperFunctions.displayMsg(["  ERROR::ArgumentError:: use -> node liri.js (command) (paramater)"]);
 }

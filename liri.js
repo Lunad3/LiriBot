@@ -22,30 +22,30 @@ var liri = {
         "my-tweets":{
             name:"my-tweets",
             description: "Display 20 most recent tweets",
-            needsArg: false,
             run:function(){
                 console.log("running liri.mytweets()");
             }        
         },
         "spotify-this-song":{
             name:"spotify-this-song",
-            description: "N/A",
-            needsArg: false,
+            description: "display song information",
+            defaultArg: "The Sign - Ace of Base",
             run:function(){
                 console.log("running liri.spotify-this-song()");
             },
         },
         "movie-this":{
             name:"movie-this",
-            description: "N/A",
+            // movie title, release year, IMBD rating, Rotten Tomatoes rating, coutry produced in, language, plot, and actors
+            description: "display movie details",
+            defaultArg: "Mr. Nobody",
             run:function(){
                 console.log("running liri.movie-this()");
             },
         },
         "do-what-it-says":{
             name:"do-what-it-says",
-            description: "N/A",
-            needsArg: false,
+            description: "",
             run:function(){
                 console.log("running liri.do-what-it-says()");
             },
@@ -53,19 +53,26 @@ var liri = {
         "help":{
             name:"help",
             description: "display liri commands",
-            needsArg: false,
             run:function(){
-                console.log("====== LIRI COMMANDS =====");
-                console.log("\t( command ) [ needs arguments? ] { description }");
+                console.log("================================ LIRI COMMANDS ===============================");
+                console.log("  ExampleCommand [default] -  description ");
+                console.log("==============================================================================")
                 for(cmd in liri.commands){
                     liri.helperFunctions.displayCommand(cmd)
                 }
+                console.log("==============================================================================")
+
             },
         }    
     },
     helperFunctions:{
         displayCommand:function(cmdName){
-            console.log("\t( " + liri.commands[cmdName].name + " ) [ " + liri.commands[cmdName].needsArg + " ] { " + liri.commands[cmdName].description + " }");
+            var str = "\t" + liri.commands[cmdName].name;
+            if (liri.commands[cmdName].defaultArg != undefined){
+                str += " [" + liri.commands[cmdName].defaultArg + "]";
+            }
+            str += " -  " + liri.commands[cmdName].description;
+            console.log(str);
         }
     }
 };
@@ -74,28 +81,16 @@ var liri = {
 // process user input
 if ( 2 < process.argv.length <= 4){
     var cmd = process.argv[2];
+    var param = process.argv[3];
     var invalidCommand = true;
     var commandObj = liri.commands[cmd];
     if (commandObj != undefined){
-        if (commandObj.needsArg){
-            if (process.argv[3] != undefined){
-                commandObj.run(process.argv[3]);
-            }
-            else{
-                console.log("LIRI::ERROR::" + commandObj.name + "::ImporperUseOfCommand:: command needs an argument");
-                liri.helperFunctions.displayCommand(commandObj);
-            }
+        if (param != undefined){
+            commandObj.run()
         }
         else{
-            if (process.argv[3] == undefined){
-                commandObj.run();
-            }
-            else{
-                console.log("LIRI::ERROR::" + commandObj.name + "::ImporperUseOfCommand:: command does NOT needs an argument");
-                liri.helperFunctions.displayCommand(commandObj);
-            }
+            commandObj.run(param);
         }
-        return;
     }
     else{
         console.log("LIRI::ERROR::InvalidCommand:: try 'help'");

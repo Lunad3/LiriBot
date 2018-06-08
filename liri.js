@@ -1,3 +1,4 @@
+//------------------------------- Set Up ------------------------------------
 //get API keys for spotify and twitter
 require("dotenv").config();
 var keys = require("./keys.js");
@@ -16,14 +17,9 @@ var request = require("request");
 //set up fs
 var fs = require("fs");
 
-//--------------------------------------------- LIRI-OBJ ----------------------------------------
-//liri.commands holds cmd obj that have:
-// + name       : comand in string
-// + description: description of what the run function will do
-// + needsArg   : bool that determines if command.run function needs an argument
-// + run        : function that executes
-
+//------------------------------- LIRI OBJ ------------------------------------
 var liri = {
+    //liri.commands -> {name:str,description:str,defaultArg*,run:function,}   *optional
     commands:{
         "my-tweets":{
             name:"my-tweets",
@@ -84,7 +80,6 @@ var liri = {
                         movieInfoArr.push("Title                 : " + bodyObj.Title);
                         movieInfoArr.push("Released              : " + bodyObj.Released);
                         for(var ratingIndex in bodyObj.Ratings){
-                            console.log(bodyObj.Ratings[ratingIndex]);
                             if (bodyObj.Ratings[ratingIndex].Source == "Internet Movie Database"){
                                 movieInfoArr.push("IMBD Rating           : " + bodyObj.Ratings[ratingIndex].Value);                                
                             }
@@ -131,6 +126,7 @@ var liri = {
             },
         }    
     },
+    //liri.helperFunctions contain functions to help with liri console output readability
     helperFunctions:{
         commandStr:function(cmdName){
             var str = liri.commands[cmdName].name + ":\n\t";
@@ -148,30 +144,26 @@ var liri = {
             console.log("==============================================================================")
         }
     },
-    executeCommand: function(cmd,param){
+    //liri.executeCommand is used to process cmd and 
+    executeCommand: function(cmd,arg){
         var commandObj = liri.commands[cmd];
         if (commandObj != undefined){
-            if (param == undefined){
-                commandObj.run()
-            }
-            else{
-                commandObj.run(param);
-            }
+            commandObj.run(arg);
         }
         else{
-            liri.helperFunctions.displayMsg(["LIRI::ERROR::InvalidCommand:: try 'help' for list of commands"]);
+            liri.helperFunctions.displayMsg(["LIRI::ERROR::executeCommand::InvalidCommand:: try 'help' for list of commands"]);
         }    
     },
-    Start: function(){
-        if (process.argv.length <= 4){
-            var cmd = process.argv[2];
-            var param = process.argv[3];
-            liri.executeCommand(cmd,param);
+    //liri.start grabs terminal arguments (process.argv) and executes command
+    start: function(){
+        if (2 < process.argv.length  && process.argv.length <= 4){
+            liri.executeCommand(process.argv[2],process.argv[3]);
         }
         else{
-            liri.helperFunctions.displayMsg(["ERROR::ArgumentError:: use -> node liri.js (command) (paramater)"]);
+            liri.helperFunctions.displayMsg(["LIRI::ERROR::start::ArgumentError:: use -> node liri.js (command) (paramater)"]);
         }
     }
 };
 
-liri.Start();
+//------------------------------- run liri ------------------------------------
+liri.start();

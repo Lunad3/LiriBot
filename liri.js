@@ -75,65 +75,31 @@ var liri = {
 if ( 2 < process.argv.length <= 4){
     var cmd = process.argv[2];
     var invalidCommand = true;
-    console.log("  CMD : "+cmd);
-
-// --------------------------------------------- PROTOTYPE WAY ----------------------------------------
-var commandObj = liri.commands[cmd];
-if (commandObj != undefined){
-    if (commandObj.needsArg){
-        if (process.argv[3] != undefined){
-            commandObj.run(process.argv[3]);
+    var commandObj = liri.commands[cmd];
+    if (commandObj != undefined){
+        if (commandObj.needsArg){
+            if (process.argv[3] != undefined){
+                commandObj.run(process.argv[3]);
+            }
+            else{
+                console.log("LIRI::ERROR::" + commandObj.name + "::ImporperUseOfCommand:: command needs an argument");
+                liri.helperFunctions.displayCommand(commandObj);
+            }
         }
         else{
-            console.log("LIRI::ERROR::" + commandObj.name + "::ImporperUseOfCommand:: command needs an argument");
-            liri.helperFunctions.displayCommand(commandObj);
+            if (process.argv[3] == undefined){
+                commandObj.run();
+            }
+            else{
+                console.log("LIRI::ERROR::" + commandObj.name + "::ImporperUseOfCommand:: command does NOT needs an argument");
+                liri.helperFunctions.displayCommand(commandObj);
+            }
         }
+        return;
     }
     else{
-        if (process.argv[3] == undefined){
-            commandObj.run();
-        }
-        else{
-            console.log("LIRI::ERROR::" + commandObj.name + "::ImporperUseOfCommand:: command does NOT needs an argument");
-            liri.helperFunctions.displayCommand(commandObj);
-        }
+        console.log("LIRI::ERROR::InvalidCommand:: try 'help'");
     }
-    return;
-}
-else{
-    console.log("LIRI::ERROR::InvalidCommand:: try 'help'");
-}
-// --------------------------------------------- ORIGINAL WAY ----------------------------------------
-// for (var commandObj in liri.commands){
-//         if (cmd == commandObj.name){
-//             console.log("--command found!")
-//             invalidCommand = false;
-//             if (commandObj.needsArg){
-//                 if (process.argv[3] != undefined){
-//                     commandObj.run(process.argv[3]);
-//                 }
-//                 else{
-//                     console.log("LIRI::ERROR::" + commandObj.name + "::ImporperUseOfCommand:: command needs an argument");
-//                     liri.helperFunctions.displayCommand(commandObj);
-//                 }
-//             }
-//             else{
-//                 if (process.argv[3] == undefined){
-//                     commandObj.run();
-//                 }
-//                 else{
-//                     console.log("LIRI::ERROR::" + commandObj.name + "::ImporperUseOfCommand:: command does NOT needs an argument");
-//                     liri.helperFunctions.displayCommand(commandObj);
-//                 }
-//             }
-//             return;
-//         }
-//         console.log("  CMD != " + commandObj.name);
-//     }
-//     if (invalidCommand){
-//         console.log("LIRI::ERROR::InvalidCommand:: try 'help'");
-//     }
-// --------------------------------------------- ORIGINAL WAY END ----------------------------------------
 }
 else{
     console.log("LIRI::ERROR::ArgumentError:: use -> node liri.js (command) (paramater)");

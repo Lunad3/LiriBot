@@ -71,7 +71,6 @@ var liri = {
         },
         "movie-this":{
             name:"movie-this",
-            // movie title, release year, IMBD rating, Rotten Tomatoes rating, coutry produced in, language, plot, and actors
             description: "display movie details",
             defaultArg: "Mr. Nobody",
             run:function(movie){

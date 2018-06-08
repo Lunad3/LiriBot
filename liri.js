@@ -35,16 +35,33 @@ var liri = {
                         }
                         liri.helperFunctions.displayMsg(tweetArr);
                     }
-                  });
+                    else{
+                        liri.helperFunctions.displayMsg(["LIRI::ERROR::my-tweets:: unknown error",response])
+                    }
+                });
             }        
         },
         "spotify-this-song":{
             name:"spotify-this-song",
             description: "display song information",
-            defaultArg: "The Sign - Ace of Base",
-            run:function(){
-                console.log("running liri.spotify-this-song()");
-            },
+            defaultArg: "The Sign",
+            run:function(song){
+                if (song == undefined)
+                    {song = "The Sign - Ace of Base";}
+                MySpotify.search({ type: 'track', query: song ,limit:1}, function(err, response) {
+                    var trackInfoArr = [];
+                    if (!err) {
+                        trackInfoArr.push("Artist   : " + response.tracks.items[0].artists[0].name);
+                        trackInfoArr.push("Song     : " + response.tracks.items[0].name);
+                        trackInfoArr.push("Prev Link: " + response.tracks.items[0].preview_url);
+                        trackInfoArr.push("Album    : " + response.tracks.items[0].album.name);
+                        liri.helperFunctions.displayMsg(trackInfoArr);
+                    }
+                    else{
+                        liri.helperFunctions.displayMsg(["LIRI::ERROR::spotify-this-song:: unknown error",response])
+                    }
+                });
+            }
         },
         "movie-this":{
             name:"movie-this",
@@ -66,7 +83,7 @@ var liri = {
             name:"help",
             description: "display liri commands",
             run:function(){
-                var cmdStrArr = ["  -- EXAMPLE [DEFAULT]  -  DESCRIPTION --"];
+                var cmdStrArr = ["-- EXAMPLE [DEFAULT]  -  DESCRIPTION --"];
                 for(cmd in liri.commands){
                     cmdStrArr.push(liri.helperFunctions.commandStr(cmd));
                 }
@@ -76,7 +93,7 @@ var liri = {
     },
     helperFunctions:{
         commandStr:function(cmdName){
-            var str = "  " + liri.commands[cmdName].name;
+            var str = liri.commands[cmdName].name;
             if (liri.commands[cmdName].defaultArg != undefined){
                 str += " [" + liri.commands[cmdName].defaultArg + "]";
             }
@@ -86,7 +103,7 @@ var liri = {
         displayMsg:function(msgArr){
             console.log("================================ LIRI ========================================");
             for(var i=0; i<msgArr.length; i++){
-                console.log(msgArr[i]);
+                console.log("  " + msgArr[i]);
             }
             console.log("==============================================================================")
         }
@@ -101,7 +118,7 @@ if (process.argv.length <= 4){
     var invalidCommand = true;
     var commandObj = liri.commands[cmd];
     if (commandObj != undefined){
-        if (param != undefined){
+        if (param == undefined){
             commandObj.run()
         }
         else{
@@ -109,9 +126,9 @@ if (process.argv.length <= 4){
         }
     }
     else{
-        liri.helperFunctions.displayMsg(["  ERROR::InvalidCommand:: try 'help'"]);
+        liri.helperFunctions.displayMsg(["ERROR::InvalidCommand:: try 'help'"]);
     }
 }
 else{
-    liri.helperFunctions.displayMsg(["  ERROR::ArgumentError:: use -> node liri.js (command) (paramater)"]);
+    liri.helperFunctions.displayMsg(["ERROR::ArgumentError:: use -> node liri.js (command) (paramater)"]);
 }
